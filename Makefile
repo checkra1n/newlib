@@ -76,7 +76,7 @@ $(BUILD):
 
 clean:
 	rm -rf $(ARCH)
-	@test -f $(BUILD)/Makefiöe || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) clean
+	@test -f $(BUILD)/Makefile || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) clean
 
 distclean:
 	rm -rf $(BUILD) $(ARCH)

@@ -1,0 +1,553 @@
+diff --git a/newlib/libc/machine/aarch64/memchr.S b/newlib/libc/machine/aarch64/memchr.S
+index 8389c8a..7025919 100644
+--- a/newlib/libc/machine/aarch64/memchr.S
++++ b/newlib/libc/machine/aarch64/memchr.S
+@@ -70,11 +70,17 @@
+  * identify exactly which byte has matched.
+  */
+ 
++#ifdef __APPLE__
++#   define memchr _memchr
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -172,5 +178,7 @@ def_fn memchr
+ 	mov	result, #0
+ 	ret
+ 
++#ifndef __APPLE__
+ 	.size	memchr, . - memchr
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/memcmp.S b/newlib/libc/machine/aarch64/memcmp.S
+index 981baab..5860f76 100644
+--- a/newlib/libc/machine/aarch64/memcmp.S
++++ b/newlib/libc/machine/aarch64/memcmp.S
+@@ -81,15 +81,21 @@
+ #define tmp1		x7
+ #define tmp2		x8
+ 
++#ifdef __APPLE__
++#   define memcmp _memcmp
++#endif
++
+         .macro def_fn f p2align=2
+         .text
+         .p2align \p2align
+         .global \f
++#ifndef __APPLE__
+         .type \f, %function
++#endif
+ \f:
+         .endm
+ 
+-def_fn memcmp p2align=6
++def_fn memcmp, 6
+ 	subs	limit, limit, 8
+ 	b.lo	L(less8)
+ 
+@@ -192,5 +198,7 @@ L(byte_loop):
+ 	sub	result, data1w, data2w
+ 	ret
+ 
++#ifndef __APPLE__
+ 	.size	memcmp, . - memcmp
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/memcpy.S b/newlib/libc/machine/aarch64/memcpy.S
+index d2de741..2c1a885 100644
+--- a/newlib/libc/machine/aarch64/memcpy.S
++++ b/newlib/libc/machine/aarch64/memcpy.S
+@@ -87,11 +87,17 @@
+ 
+ #define L(l) .L ## l
+ 
++#ifdef __APPLE__
++#   define memcpy _memcpy
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -104,7 +110,7 @@
+    well as non-overlapping copies.
+ */
+ 
+-def_fn memcpy p2align=6
++def_fn memcpy, 6
+ 	prfm	PLDL1KEEP, [src]
+ 	add	srcend, src, count
+ 	add	dstend, dstin, count
+@@ -226,5 +232,7 @@ L(copy_long):
+ 	stp	C_l, C_h, [dstend, -16]
+ 	ret
+ 
++#ifndef __APPLE__
+ 	.size	memcpy, . - memcpy
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/memmove.S b/newlib/libc/machine/aarch64/memmove.S
+index 6da548f..3954820 100644
+--- a/newlib/libc/machine/aarch64/memmove.S
++++ b/newlib/libc/machine/aarch64/memmove.S
+@@ -61,11 +61,18 @@
+ /* See memmove-stub.c  */
+ #else
+ 
++#ifdef __APPLE__
++#   define memcpy _memcpy
++#   define memmove _memmove
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -97,8 +104,11 @@ def_fn memmove, 6
+ 	sub	tmp1, dstin, src
+ 	cmp	count, 96
+ 	ccmp	tmp1, count, 2, hi
+-	b.hs	memcpy
++	/* Darwin can't use b.hs to jump to external labels. */
++	b.lo	0f
++	b	memcpy
+ 
++0:
+ 	cbz	tmp1, 3f
+ 	add	dstend, dstin, count
+ 	add	srcend, src, count
+@@ -151,5 +161,7 @@ def_fn memmove, 6
+ 	stp	C_l, C_h, [dstin]
+ 3:	ret
+ 
++#ifndef __APPLE__
+ 	.size	memmove, . - memmove
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/memset.S b/newlib/libc/machine/aarch64/memset.S
+index cad9117..922595e 100644
+--- a/newlib/libc/machine/aarch64/memset.S
++++ b/newlib/libc/machine/aarch64/memset.S
+@@ -77,15 +77,21 @@
+ 
+ #define L(l) .L ## l
+ 
++#ifdef __APPLE__
++#   define memset _memset
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+-def_fn memset p2align=6
++def_fn memset, 6
+ 
+ 	dup	v0.16B, valw
+ 	add	dstend, dstin, count
+@@ -236,5 +242,7 @@ L(zva_other):
+ 	sub	dst, dst, 32		/* Bias dst for tail loop.  */
+ 	b	L(tail64)
+ 
++#ifndef __APPLE__
+ 	.size	memset, . - memset
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/rawmemchr.S b/newlib/libc/machine/aarch64/rawmemchr.S
+index 484971b..db460e5 100644
+--- a/newlib/libc/machine/aarch64/rawmemchr.S
++++ b/newlib/libc/machine/aarch64/rawmemchr.S
+@@ -36,11 +36,19 @@
+ 
+ #define L(l) .L ## l
+ 
++#ifdef __APPLE__
++#   define memchr _memchr
++#   define rawmemchr _rawmemchr
++#   define strlen _strlen
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -48,7 +56,7 @@
+    Call strlen without setting up a full frame - it preserves x14/x15.
+ */
+ 
+-def_fn rawmemchr p2align=5
++def_fn rawmemchr, 5
+ 	.cfi_startproc
+ 	cbz	w1, L(do_strlen)
+ 	mov	x2, -1
+@@ -63,5 +71,7 @@ L(do_strlen):
+ 	ret	x15
+ 	.cfi_endproc
+ 
++#ifndef __APPLE__
+ 	.size   rawmemchr, . - rawmemchr
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/setjmp.S b/newlib/libc/machine/aarch64/setjmp.S
+index fde0e45..0335b67 100644
+--- a/newlib/libc/machine/aarch64/setjmp.S
++++ b/newlib/libc/machine/aarch64/setjmp.S
+@@ -41,10 +41,17 @@
+ 	REG_PAIR (d12, d13, 144);	\
+ 	REG_PAIR (d14, d15, 160);
+ 
++#ifdef __APPLE__
++#   define setjmp _setjmp
++#   define longjmp _longjmp
++#endif
++
+ // int setjmp (jmp_buf)
+ 	.global	setjmp
+ 	.p2align	2
++#ifndef __APPLE__
+ 	.type	setjmp, %function
++#endif
+ setjmp:
+ 	mov	x16, sp
+ #define REG_PAIR(REG1, REG2, OFFS)	stp REG1, REG2, [x0, OFFS]
+@@ -55,12 +62,16 @@ setjmp:
+ #undef REG_ONE
+ 	mov	w0, #0
+ 	ret
++#ifndef __APPLE__
+ 	.size	setjmp, .-setjmp
++#endif
+ 
+ // void longjmp (jmp_buf, int) __attribute__ ((noreturn))
+ 	.global	longjmp
+ 	.p2align	2
++#ifndef __APPLE__
+ 	.type	longjmp, %function
++#endif
+ longjmp:
+ #define REG_PAIR(REG1, REG2, OFFS)	ldp REG1, REG2, [x0, OFFS]
+ #define REG_ONE(REG1, OFFS)		ldr REG1, [x0, OFFS]
+@@ -73,4 +84,7 @@ longjmp:
+ 	cinc	w0, w1, eq
+ 	// use br not ret, as ret is guaranteed to mispredict
+ 	br	x30
++
++#ifndef __APPLE__
+ 	.size	longjmp, .-longjmp
++#endif
+diff --git a/newlib/libc/machine/aarch64/strchr.S b/newlib/libc/machine/aarch64/strchr.S
+index 8ed6ef6..c7e159b 100644
+--- a/newlib/libc/machine/aarch64/strchr.S
++++ b/newlib/libc/machine/aarch64/strchr.S
+@@ -74,11 +74,17 @@
+ 
+ /* Locals and temporaries.  */
+ 
++#ifdef __APPLE__
++#   define strchr _strchr
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -160,5 +166,7 @@ def_fn strchr
+ 	csel	result, result, xzr, eq
+ 	ret
+ 
++#ifndef __APPLE__
+ 	.size	strchr, . - strchr
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/strchrnul.S b/newlib/libc/machine/aarch64/strchrnul.S
+index 0e257fa..9f5551f 100644
+--- a/newlib/libc/machine/aarch64/strchrnul.S
++++ b/newlib/libc/machine/aarch64/strchrnul.S
+@@ -70,11 +70,17 @@
+ 
+ /* Locals and temporaries.  */
+ 
++#ifdef __APPLE__
++#   define strchrnul _strchrnul
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -145,5 +151,7 @@ def_fn strchrnul
+ 	add	result, src, tmp1, lsr #1
+ 	ret
+ 
++#ifndef __APPLE__
+ 	.size	strchrnul, . - strchrnul
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/strcmp.S b/newlib/libc/machine/aarch64/strcmp.S
+index cabcf4f..a9cb13f 100644
+--- a/newlib/libc/machine/aarch64/strcmp.S
++++ b/newlib/libc/machine/aarch64/strcmp.S
+@@ -33,11 +33,17 @@
+ /* See strcmp-stub.c  */
+ #else
+ 
++#ifdef __APPLE__
++#   define strcmp _strcmp
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -67,7 +73,7 @@
+ #define pos		x11
+ 
+ 	/* Start of performance-critical section  -- one 64B cache line.  */
+-def_fn strcmp p2align=6
++def_fn strcmp, 6
+ 	eor	tmp1, src1, src2
+ 	mov	zeroones, #REP8_01
+ 	tst	tmp1, #7
+@@ -197,6 +203,8 @@ L(loop_misaligned):
+ L(done):
+ 	sub	result, data1, data2
+ 	ret
+-	.size	strcmp, .-strcmp
+ 
++#ifndef __APPLE__
++	.size	strcmp, .-strcmp
++#endif
+ #endif
+diff --git a/newlib/libc/machine/aarch64/strcpy.S b/newlib/libc/machine/aarch64/strcpy.S
+index 95533de..fc3a73e 100644
+--- a/newlib/libc/machine/aarch64/strcpy.S
++++ b/newlib/libc/machine/aarch64/strcpy.S
+@@ -66,17 +66,27 @@
+ #define len		x16
+ #define to_align	x17
+ 
++#ifdef __APPLE__
++#ifdef BUILD_STPCPY
++#define STRCPY _stpcpy
++#else
++#define STRCPY _strcpy
++#endif
++#else
+ #ifdef BUILD_STPCPY
+ #define STRCPY stpcpy
+ #else
+ #define STRCPY strcpy
++#endif
+ #endif
+ 
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -111,7 +121,7 @@
+ 
+ #define MIN_PAGE_SIZE (1 << MIN_PAGE_P2)
+ 
+-def_fn STRCPY p2align=6
++def_fn STRCPY, 6
+ 	/* For moderately short strings, the fastest way to do the copy is to
+ 	   calculate the length of the string in the same way as strlen, then
+ 	   essentially do a memcpy of the result.  This avoids the need for
+@@ -337,5 +347,7 @@ def_fn STRCPY p2align=6
+ 	bic	has_nul2, tmp3, tmp4
+ 	b	.Lfp_gt8
+ 
++#ifndef __APPLE__
+ 	.size	STRCPY, . - STRCPY
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/strlen.S b/newlib/libc/machine/aarch64/strlen.S
+index 7e6ced0..d6839c1 100644
+--- a/newlib/libc/machine/aarch64/strlen.S
++++ b/newlib/libc/machine/aarch64/strlen.S
+@@ -55,11 +55,17 @@
+ 
+ #define L(l) .L ## l
+ 
++#ifdef __APPLE__
++#   define strlen _strlen
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -104,7 +110,7 @@
+ 	   whether the first fetch, which may be misaligned, crosses a page
+ 	   boundary.  */
+ 
+-def_fn strlen p2align=6
++def_fn strlen, 6
+ 	and	tmp1, srcin, MIN_PAGE_SIZE - 1
+ 	mov	zeroones, REP8_01
+ 	cmp	tmp1, MIN_PAGE_SIZE - 16
+@@ -234,5 +240,7 @@ L(page_cross):
+ 	csel	data2, data2, tmp2, eq
+ 	b	L(page_cross_entry)
+ 
++#ifndef __APPLE__
+ 	.size	strlen, . - strlen
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/strncmp.S b/newlib/libc/machine/aarch64/strncmp.S
+index b218e95..bbae2a0 100644
+--- a/newlib/libc/machine/aarch64/strncmp.S
++++ b/newlib/libc/machine/aarch64/strncmp.S
+@@ -33,11 +33,17 @@
+  * ARMv8-a, AArch64
+  */
+ 
++#ifdef __APPLE__
++#   define strncmp _strncmp
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -286,5 +292,8 @@ def_fn strncmp
+ .Lret0:
+ 	mov	result, #0
+ 	ret
++
++#ifndef __APPLE__
+ 	.size strncmp, . - strncmp
+ #endif
++#endif
+diff --git a/newlib/libc/machine/aarch64/strnlen.S b/newlib/libc/machine/aarch64/strnlen.S
+index 0eb7424..f6f501f 100644
+--- a/newlib/libc/machine/aarch64/strnlen.S
++++ b/newlib/libc/machine/aarch64/strnlen.S
+@@ -55,11 +55,17 @@
+ #define pos		x13
+ #define limit_wd	x14
+ 
++#ifdef __APPLE__
++#   define strnlen _strnlen
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -182,6 +188,8 @@ def_fn strnlen
+ 	csinv	data1, data1, xzr, le
+ 	csel	data2, data2, data2a, le
+ 	b	.Lrealigned
+-	.size	strnlen, . - .Lstart	/* Include pre-padding in size.  */
+ 
++#ifndef __APPLE__
++	.size	strnlen, . - .Lstart	/* Include pre-padding in size.  */
++#endif
+ #endif
+diff --git a/newlib/libc/machine/aarch64/strrchr.S b/newlib/libc/machine/aarch64/strrchr.S
+index ee425c4..b65833f 100644
+--- a/newlib/libc/machine/aarch64/strrchr.S
++++ b/newlib/libc/machine/aarch64/strrchr.S
+@@ -80,11 +80,17 @@
+ 
+ /* Locals and temporaries.  */
+ 
++#ifdef __APPLE__
++#   define strrchr _strrchr
++#endif
++
+ 	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
++#ifndef __APPLE__
+ 	.type \f, %function
++#endif
+ \f:
+ 	.endm
+ 
+@@ -178,5 +184,7 @@ def_fn strrchr
+ 
+ 	ret
+ 
++#ifndef __APPLE__
+ 	.size	strrchr, . - strrchr
+ #endif
++#endif

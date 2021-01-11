@@ -1,0 +1,207 @@
+diff --git a/newlib/libc/machine/aarch64/memchr.S b/newlib/libc/machine/aarch64/memchr.S
+index 53f5d6b..91c2af2 100644
+--- a/newlib/libc/machine/aarch64/memchr.S
++++ b/newlib/libc/machine/aarch64/memchr.S
+@@ -70,7 +70,7 @@
+  * identify exactly which byte has matched.
+  */
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/memcmp.S b/newlib/libc/machine/aarch64/memcmp.S
+index 605d993..981baab 100644
+--- a/newlib/libc/machine/aarch64/memcmp.S
++++ b/newlib/libc/machine/aarch64/memcmp.S
+@@ -81,7 +81,7 @@
+ #define tmp1		x7
+ #define tmp2		x8
+ 
+-        .macro def_fn f p2align=0
++        .macro def_fn f p2align=2
+         .text
+         .p2align \p2align
+         .global \f
+diff --git a/newlib/libc/machine/aarch64/memcpy.S b/newlib/libc/machine/aarch64/memcpy.S
+index 463bad0..d2de741 100644
+--- a/newlib/libc/machine/aarch64/memcpy.S
++++ b/newlib/libc/machine/aarch64/memcpy.S
+@@ -87,7 +87,7 @@
+ 
+ #define L(l) .L ## l
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/memmove.S b/newlib/libc/machine/aarch64/memmove.S
+index 597a8c8..6da548f 100644
+--- a/newlib/libc/machine/aarch64/memmove.S
++++ b/newlib/libc/machine/aarch64/memmove.S
+@@ -61,7 +61,7 @@
+ /* See memmove-stub.c  */
+ #else
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/memset.S b/newlib/libc/machine/aarch64/memset.S
+index 103e3f8..cad9117 100644
+--- a/newlib/libc/machine/aarch64/memset.S
++++ b/newlib/libc/machine/aarch64/memset.S
+@@ -77,7 +77,7 @@
+ 
+ #define L(l) .L ## l
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/rawmemchr.S b/newlib/libc/machine/aarch64/rawmemchr.S
+index 26da810..484971b 100644
+--- a/newlib/libc/machine/aarch64/rawmemchr.S
++++ b/newlib/libc/machine/aarch64/rawmemchr.S
+@@ -36,7 +36,7 @@
+ 
+ #define L(l) .L ## l
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+@@ -65,4 +65,3 @@ L(do_strlen):
+ 
+ 	.size   rawmemchr, . - rawmemchr
+ #endif
+-
+diff --git a/newlib/libc/machine/aarch64/setjmp.S b/newlib/libc/machine/aarch64/setjmp.S
+index 0856145..fde0e45 100644
+--- a/newlib/libc/machine/aarch64/setjmp.S
++++ b/newlib/libc/machine/aarch64/setjmp.S
+@@ -43,6 +43,7 @@
+ 
+ // int setjmp (jmp_buf)
+ 	.global	setjmp
++	.p2align	2
+ 	.type	setjmp, %function
+ setjmp:
+ 	mov	x16, sp
+@@ -58,6 +59,7 @@ setjmp:
+ 
+ // void longjmp (jmp_buf, int) __attribute__ ((noreturn))
+ 	.global	longjmp
++	.p2align	2
+ 	.type	longjmp, %function
+ longjmp:
+ #define REG_PAIR(REG1, REG2, OFFS)	ldp REG1, REG2, [x0, OFFS]
+diff --git a/newlib/libc/machine/aarch64/strchr.S b/newlib/libc/machine/aarch64/strchr.S
+index 2448dbc..5fc0fd0 100644
+--- a/newlib/libc/machine/aarch64/strchr.S
++++ b/newlib/libc/machine/aarch64/strchr.S
+@@ -74,7 +74,7 @@
+ 
+ /* Locals and temporaries.  */
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strchrnul.S b/newlib/libc/machine/aarch64/strchrnul.S
+index a0ac13b..99fba31 100644
+--- a/newlib/libc/machine/aarch64/strchrnul.S
++++ b/newlib/libc/machine/aarch64/strchrnul.S
+@@ -70,7 +70,7 @@
+ 
+ /* Locals and temporaries.  */
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strcmp.S b/newlib/libc/machine/aarch64/strcmp.S
+index e2bef2d..cabcf4f 100644
+--- a/newlib/libc/machine/aarch64/strcmp.S
++++ b/newlib/libc/machine/aarch64/strcmp.S
+@@ -33,7 +33,7 @@
+ /* See strcmp-stub.c  */
+ #else
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strcpy.S b/newlib/libc/machine/aarch64/strcpy.S
+index e5405f2..95533de 100644
+--- a/newlib/libc/machine/aarch64/strcpy.S
++++ b/newlib/libc/machine/aarch64/strcpy.S
+@@ -72,7 +72,7 @@
+ #define STRCPY strcpy
+ #endif
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strlen.S b/newlib/libc/machine/aarch64/strlen.S
+index 872d136..7e6ced0 100644
+--- a/newlib/libc/machine/aarch64/strlen.S
++++ b/newlib/libc/machine/aarch64/strlen.S
+@@ -55,7 +55,7 @@
+ 
+ #define L(l) .L ## l
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strncmp.S b/newlib/libc/machine/aarch64/strncmp.S
+index ffdabc2..b218e95 100644
+--- a/newlib/libc/machine/aarch64/strncmp.S
++++ b/newlib/libc/machine/aarch64/strncmp.S
+@@ -33,7 +33,7 @@
+  * ARMv8-a, AArch64
+  */
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strnlen.S b/newlib/libc/machine/aarch64/strnlen.S
+index c255c3f..0eb7424 100644
+--- a/newlib/libc/machine/aarch64/strnlen.S
++++ b/newlib/libc/machine/aarch64/strnlen.S
+@@ -55,7 +55,7 @@
+ #define pos		x13
+ #define limit_wd	x14
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f
+diff --git a/newlib/libc/machine/aarch64/strrchr.S b/newlib/libc/machine/aarch64/strrchr.S
+index d64fc09..8cf8d30 100644
+--- a/newlib/libc/machine/aarch64/strrchr.S
++++ b/newlib/libc/machine/aarch64/strrchr.S
+@@ -80,7 +80,7 @@
+ 
+ /* Locals and temporaries.  */
+ 
+-	.macro def_fn f p2align=0
++	.macro def_fn f p2align=2
+ 	.text
+ 	.p2align \p2align
+ 	.global \f

@@ -8,10 +8,14 @@ endif
 
 ifeq ($(HOST_OS),Darwin)
 	EMBEDDED_CC         ?= xcrun -sdk iphoneos clang
+	EMBEDDED_AR         ?= ar
+	EMBEDDED_RANLIB     ?= ranlib
 else
 ifeq ($(HOST_OS),Linux)
 	EMBEDDED_CC         ?= clang
 	EMBEDDED_LDFLAGS    ?= -fuse-ld=/usr/bin/ld64
+	EMBEDDED_AR         ?= llvm-ar
+	EMBEDDED_RANLIB     ?= llvm-ranlib
 endif
 endif
 
@@ -63,6 +67,8 @@ $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefi
 		CC='$(EMBEDDED_CC)' \
 		CFLAGS='$(EMBEDDED_CC_FLAGS)' \
 		LDFLAGS='$(EMBEDDED_LD_FLAGS)' \
+		AR='$(EMBEDDED_AR)' \
+		RANLIB='$(EMBEDDED_RANLIB)' \
 	;
 
 $(BUILD):

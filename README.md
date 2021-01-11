@@ -8,12 +8,17 @@ The current Newlib is based on version 4.1.0.
 
 ### Building
 
-If you have `clang` in a standard path and are either on macOS, or have Apple's `ld64` installed to `/usr/bin/ld64`:
+On macOS with Xcode installed, or on Linux with `clang`/`llvm-ar`/`llvm-ranlib` and Apple's `ld64` installed:
 
     make
 
-If you need to adjust the paths of either clang or the linker:
+If you need to adjust any of the paths or options:
 
-    EMBEDDED_CC="path/to/clang" EMBEDDED_CFLAGS="<whatever>" EMBEDDED_LDFLAGS="-fuse-ld=path/to/ld64" make
+    EMBEDDED_CC="path/to/clang" \
+    EMBEDDED_CFLAGS="<whatever>" \
+    EMBEDDED_LDFLAGS="-fuse-ld=path/to/ld64" \
+    EMBEDDED_AR="path/to/llvm-ar" \
+    EMBEDDED_RANLIB="path/to/llvm-ranlib" \
+    make
 
 If there's further defaults you need to override, see `EMBEDDED_CC_FLAGS` and `EMBEDDED_LD_FLAGS` in the Makefile.

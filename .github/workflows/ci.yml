@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  # Trigger on all pushes and pull requests
+  push:
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - run: |
+          echo 'deb https://assets.checkra.in/debian /' | sudo tee /etc/apt/sources.list.d/checkra1n.list
+          sudo apt-key adv --fetch-keys https://assets.checkra.in/debian/archive.key
+          sudo apt-get update
+          sudo apt-get install -y ld64
+      - uses: actions/checkout@v2
+      - run: EMBEDDED_CC='clang-10' make all
+      - uses: actions/upload-artifact@v2
+        with:
+          name: newlib
+          path: aarch64-none-darwin

@@ -62,6 +62,7 @@ $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefi
 		--enable-newlib-io-long-long \
 		--disable-newlib-io-float \
 		--disable-newlib-supplied-syscalls \
+		--disable-multilib \
 		--disable-shared \
 		--enable-static \
 		CC='$(EMBEDDED_CC)' \

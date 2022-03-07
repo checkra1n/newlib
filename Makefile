@@ -1,4 +1,4 @@
-ifndef $(HOST_OS)
+ifndef HOST_OS
 	ifeq ($(OS),Windows_NT)
 		HOST_OS := Windows
 	else
@@ -13,7 +13,7 @@ ifeq ($(HOST_OS),Darwin)
 else
 ifeq ($(HOST_OS),Linux)
 	EMBEDDED_CC         ?= clang
-	EMBEDDED_LDFLAGS    ?= -fuse-ld=/usr/bin/ld64
+	EMBEDDED_LDFLAGS    ?= -fuse-ld='$(shell which ld64)'
 	EMBEDDED_AR         ?= llvm-ar
 	EMBEDDED_RANLIB     ?= llvm-ranlib
 endif
@@ -34,27 +34,27 @@ all: $(patsubst %, $(ARCH)/lib/%, libc.a libg.a libm.a)
 
 # Actual targets
 $(ARCH)/lib/libc.a: $(patsubst %, $(BUILD)/%, libc.a libg.a libm.a)
-	$(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) install
+	$(MAKE) -C $(BUILD) install
 
 $(BUILD)/libc.a: $(BUILD)/Makefile always
-	$(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) all
+	$(MAKE) -C $(BUILD) all
 
 # Multiple output hell
 $(ARCH)/lib/libg.a: $(ARCH)/lib/libc.a
-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) install
+	@test -f $@ || $(MAKE) -C $(BUILD) install
 
 $(ARCH)/lib/libm.a: $(ARCH)/lib/libg.a
-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) install
+	@test -f $@ || $(MAKE) -C $(BUILD) install
 
 $(BUILD)/libg.a: $(BUILD)/libc.a
-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) all
+	@test -f $@ || $(MAKE) -C $(BUILD) all
 
 $(BUILD)/libm.a: $(BUILD)/libg.a
-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) all
+	@test -f $@ || $(MAKE) -C $(BUILD) all
 
 # Dependency
 $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefile.in | $(BUILD)
-	cd $(BUILD); \
+	cd $(BUILD) && \
 	$(SRC)/newlib/configure \
 		--prefix='$(PREFIX)' \
 		--host=$(ARCH) \
@@ -77,7 +77,7 @@ $(BUILD):
 
 clean:
 	rm -rf $(ARCH)
-	@test -f $(BUILD)/Makefile || $(MAKE) $(AM_MAKEFLAGS) -C $(BUILD) clean
+	@test -f $(BUILD)/Makefile || $(MAKE) -C $(BUILD) clean
 
 distclean:
 	rm -rf $(BUILD) $(ARCH)

@@ -1,32 +1,74 @@
+ARCH                        := aarch64-none-darwin
+ROOT                        := $(shell pwd)
+SRC                         := $(ROOT)/src
+BUILD                       := $(ROOT)/build
+PREFIX                      := $(ROOT)
+
 ifndef HOST_OS
-	ifeq ($(OS),Windows_NT)
-		HOST_OS := Windows
-	else
-		HOST_OS := $(shell uname -s)
-	endif
+    ifeq ($(OS),Windows_NT)
+        HOST_OS             := Windows
+    else
+        HOST_OS             := $(shell uname -s)
+    endif
+endif
+
+# Toolchain
+ifdef LLVM_AR
+    EMBEDDED_AR             ?= $(LLVM_AR)
+endif
+ifdef LLVM_RANLIB
+    EMBEDDED_RANLIB         ?= $(LLVM_RANLIB)
+endif
+
+ifdef LLVM_CONFIG
+    EMBEDDED_LLVM_CONFIG    ?= $(LLVM_CONFIG)
+endif
+
+# ifdef+ifndef is ugly, but we really don't wanna use ?= when shell expansion is involved
+ifdef EMBEDDED_LLVM_CONFIG
+ifndef EMBEDDED_LLVM_PREFIX
+    EMBEDDED_LLVM_PREFIX    := $(shell $(EMBEDDED_LLVM_CONFIG) --obj-root)
+endif
+endif
+
+ifdef LLVM_PREFIX
+    EMBEDDED_LLVM_PREFIX    ?= $(LLVM_PREFIX)
+endif
+
+ifdef EMBEDDED_LLVM_PREFIX
+    EMBEDDED_CC             ?= $(EMBEDDED_LLVM_PREFIX)/bin/clang
+    EMBEDDED_LD             ?= $(EMBEDDED_LLVM_PREFIX)/bin/ld64.lld
+    EMBEDDED_AR             ?= $(EMBEDDED_LLVM_PREFIX)/bin/llvm-ar
+    EMBEDDED_RANLIB         ?= $(EMBEDDED_LLVM_PREFIX)/bin/llvm-ranlib
 endif
 
 ifeq ($(HOST_OS),Darwin)
-	EMBEDDED_CC         ?= xcrun -sdk iphoneos clang
-	EMBEDDED_AR         ?= ar
-	EMBEDDED_RANLIB     ?= ranlib
+    EMBEDDED_CC             ?= xcrun -sdk iphoneos clang
+    EMBEDDED_AR             ?= ar
+    EMBEDDED_RANLIB         ?= ranlib
 else
 ifeq ($(HOST_OS),Linux)
-	EMBEDDED_CC         ?= clang
-	EMBEDDED_LDFLAGS    ?= -fuse-ld='$(shell which ld64)'
-	EMBEDDED_AR         ?= llvm-ar
-	EMBEDDED_RANLIB     ?= llvm-ranlib
+    EMBEDDED_CC             ?= clang
+    EMBEDDED_LD             ?= lld
+    EMBEDDED_AR             ?= llvm-ar
+    EMBEDDED_RANLIB         ?= llvm-ranlib
 endif
 endif
 
-EMBEDDED_CC_FLAGS       ?= --target=arm64-apple-ios12.0 -Wall -O3 -ffreestanding -nostdlib -nostdlibinc -fno-builtin -fno-blocks -U__nonnull -D_LDBL_EQ_DBL $(EMBEDDED_CFLAGS)
-EMBEDDED_LD_FLAGS       ?= $(EMBEDDED_LDFLAGS)
+ifdef EMBEDDED_LD
+    EMBEDDED_LDFLAGS        ?= -fuse-ld='$(EMBEDDED_LD)'
+endif
 
-ARCH                    := aarch64-none-darwin
-ROOT                    := $(shell pwd)
-SRC                     := $(ROOT)/src
-BUILD                   := $(ROOT)/build
-PREFIX                  := $(ROOT)
+# Safeguard against GNU ar/ranlib
+ifneq ($(shell $(EMBEDDED_AR) V 2>&1 | grep -F 'GNU ar' || true),)
+    $(error GNU ar detected, need LLVM ar)
+endif
+ifneq ($(shell $(EMBEDDED_RANLIB) -V 2>&1 | grep -F 'GNU ranlib' || true),)
+    $(error GNU ranlib detected, need LLVM ranlib)
+endif
+
+EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -O3 -ffreestanding -nostdlib -nostdlibinc -fno-builtin -fno-blocks -U__nonnull -D_LDBL_EQ_DBL $(EMBEDDED_CFLAGS)
+EMBEDDED_LD_FLAGS           ?= $(EMBEDDED_LDFLAGS)
 
 .PHONY: all always clean distclean
 

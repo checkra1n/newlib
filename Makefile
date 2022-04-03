@@ -67,32 +67,24 @@ ifneq ($(shell $(EMBEDDED_RANLIB) -V 2>&1 | grep -F 'GNU ranlib' || true),)
     $(error GNU ranlib detected, need LLVM ranlib)
 endif
 
-EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -O3 -ffreestanding -nostdlib -nostdlibinc -fno-builtin -fno-blocks -U__nonnull -D_LDBL_EQ_DBL $(EMBEDDED_CFLAGS)
+EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -Os -moutline -ffreestanding -nostdlib -nostdlibinc -fno-builtin -fno-blocks -U__nonnull -D_LDBL_EQ_DBL -DABORT_PROVIDED $(EMBEDDED_CFLAGS)
 EMBEDDED_LD_FLAGS           ?= $(EMBEDDED_LDFLAGS)
 
 .PHONY: all always clean distclean
 
-all: $(patsubst %, $(ARCH)/lib/%, libc.a libg.a libm.a)
+all: $(ARCH)/fixup/libc.a
+
+# We need to replace the implemntations of __stack_chk_fail and __chk_fail
+$(ARCH)/fixup/libc.a: $(ARCH)/lib/libc.a | $(ARCH)/fixup
+	cp $< $@
+	$(EMBEDDED_AR) -d $@ lib_a-stack_protector.o lib_a-chk_fail.o
 
 # Actual targets
-$(ARCH)/lib/libc.a: $(patsubst %, $(BUILD)/%, libc.a libg.a libm.a)
+$(ARCH)/lib/libc.a: $(BUILD)/libc.a
 	$(MAKE) -C $(BUILD) install
 
 $(BUILD)/libc.a: $(BUILD)/Makefile always
 	$(MAKE) -C $(BUILD) all
-
-# Multiple output hell
-$(ARCH)/lib/libg.a: $(ARCH)/lib/libc.a
-	@test -f $@ || $(MAKE) -C $(BUILD) install
-
-$(ARCH)/lib/libm.a: $(ARCH)/lib/libg.a
-	@test -f $@ || $(MAKE) -C $(BUILD) install
-
-$(BUILD)/libg.a: $(BUILD)/libc.a
-	@test -f $@ || $(MAKE) -C $(BUILD) all
-
-$(BUILD)/libm.a: $(BUILD)/libg.a
-	@test -f $@ || $(MAKE) -C $(BUILD) all
 
 # Dependency
 $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefile.in | $(BUILD)
@@ -100,10 +92,15 @@ $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefi
 	$(SRC)/newlib/configure \
 		--prefix='$(PREFIX)' \
 		--host=$(ARCH) \
+		--enable-target-optspace \
 		--enable-newlib-io-c99-formats \
 		--enable-newlib-io-long-long \
 		--disable-newlib-io-float \
+		--disable-newlib-io-long-double \
 		--disable-newlib-supplied-syscalls \
+		--disable-newlib-mb \
+		--disable-newlib-wide-orient \
+		--disable-newlib-register-fini \
 		--disable-multilib \
 		--disable-shared \
 		--enable-static \
@@ -114,12 +111,12 @@ $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefi
 		RANLIB='$(EMBEDDED_RANLIB)' \
 	;
 
-$(BUILD):
+$(BUILD) $(ARCH)/fixup:
 	mkdir -p $@
 
 clean:
 	rm -rf $(ARCH)
-	@test -f $(BUILD)/Makefile || $(MAKE) -C $(BUILD) clean
+	@test -f $(BUILD)/Makefile && $(MAKE) -C $(BUILD) clean
 
 distclean:
 	rm -rf $(BUILD) $(ARCH)

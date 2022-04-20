@@ -26,20 +26,20 @@ endif
 
 # ifdef+ifndef is ugly, but we really don't wanna use ?= when shell expansion is involved
 ifdef EMBEDDED_LLVM_CONFIG
-ifndef EMBEDDED_LLVM_PREFIX
-    EMBEDDED_LLVM_PREFIX    := $(shell $(EMBEDDED_LLVM_CONFIG) --obj-root)
+ifndef EMBEDDED_LLVM_BINDIR
+    EMBEDDED_LLVM_BINDIR    := $(shell $(EMBEDDED_LLVM_CONFIG) --bindir)
 endif
 endif
 
-ifdef LLVM_PREFIX
-    EMBEDDED_LLVM_PREFIX    ?= $(LLVM_PREFIX)
+ifdef LLVM_BINDIR
+    EMBEDDED_LLVM_BINDIR    ?= $(LLVM_BINDIR)
 endif
 
-ifdef EMBEDDED_LLVM_PREFIX
-    EMBEDDED_CC             ?= $(EMBEDDED_LLVM_PREFIX)/bin/clang
-    EMBEDDED_LD             ?= $(EMBEDDED_LLVM_PREFIX)/bin/ld64.lld
-    EMBEDDED_AR             ?= $(EMBEDDED_LLVM_PREFIX)/bin/llvm-ar
-    EMBEDDED_RANLIB         ?= $(EMBEDDED_LLVM_PREFIX)/bin/llvm-ranlib
+ifdef EMBEDDED_LLVM_BINDIR
+    EMBEDDED_CC             ?= $(EMBEDDED_LLVM_BINDIR)/clang
+    EMBEDDED_LD             ?= $(EMBEDDED_LLVM_BINDIR)/ld64.lld
+    EMBEDDED_AR             ?= $(EMBEDDED_LLVM_BINDIR)/llvm-ar
+    EMBEDDED_RANLIB         ?= $(EMBEDDED_LLVM_BINDIR)/llvm-ranlib
 endif
 
 ifeq ($(HOST_OS),Darwin)

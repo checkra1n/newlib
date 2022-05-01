@@ -67,8 +67,8 @@ ifneq ($(shell $(EMBEDDED_RANLIB) -V 2>&1 | grep -F 'GNU ranlib' || true),)
     $(error GNU ranlib detected, need LLVM ranlib)
 endif
 
-EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -Os -moutline -ffreestanding -nostdlib -nostdlibinc -fno-builtin -fno-blocks -U__nonnull -D_LDBL_EQ_DBL -DABORT_PROVIDED $(EMBEDDED_CFLAGS)
-EMBEDDED_LD_FLAGS           ?= $(EMBEDDED_LDFLAGS)
+EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -Os -flto -moutline -ffreestanding -nostdlibinc -fno-blocks -U__nonnull -D_LDBL_EQ_DBL -DABORT_PROVIDED $(EMBEDDED_CFLAGS) $(NEWLIB_CFLAGS)
+EMBEDDED_LD_FLAGS           ?= $(EMBEDDED_LDFLAGS) $(NEWLIB_LDFLAGS)
 
 .PHONY: all always clean distclean
 

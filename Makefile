@@ -42,13 +42,15 @@ ifdef EMBEDDED_LLVM_BINDIR
     EMBEDDED_RANLIB         ?= $(EMBEDDED_LLVM_BINDIR)/llvm-ranlib
 endif
 
+CLANG                       ?= clang
+
 ifeq ($(HOST_OS),Darwin)
     EMBEDDED_CC             ?= xcrun -sdk iphoneos clang
     EMBEDDED_AR             ?= ar
     EMBEDDED_RANLIB         ?= ranlib
 else
 ifeq ($(HOST_OS),Linux)
-    EMBEDDED_CC             ?= clang
+    EMBEDDED_CC             ?= $(CLANG)
     EMBEDDED_LD             ?= lld
     EMBEDDED_AR             ?= llvm-ar
     EMBEDDED_RANLIB         ?= llvm-ranlib

@@ -69,7 +69,7 @@ ifneq ($(shell $(EMBEDDED_RANLIB) -V 2>&1 | grep -F 'GNU ranlib' || true),)
     $(error GNU ranlib detected, need LLVM ranlib)
 endif
 
-EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -Os -flto -moutline -ffreestanding -nostdlibinc -fno-blocks -U__nonnull -D_LDBL_EQ_DBL -DABORT_PROVIDED $(EMBEDDED_CFLAGS) $(NEWLIB_CFLAGS)
+EMBEDDED_CC_FLAGS           ?= --target=arm64-apple-ios12.0 -std=gnu17 -Wall -Os -flto -moutline -ffreestanding -nostdlibinc -fno-blocks -U__nonnull -D_LDBL_EQ_DBL -DABORT_PROVIDED -DGETREENT_PROVIDED -DREENTRANT_SYSCALLS_PROVIDED -D__DYNAMIC_REENT__ $(EMBEDDED_CFLAGS) $(NEWLIB_CFLAGS)
 EMBEDDED_LD_FLAGS           ?= $(EMBEDDED_LDFLAGS) $(NEWLIB_LDFLAGS)
 
 .PHONY: all always clean distclean
@@ -97,6 +97,7 @@ $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefi
 		--enable-target-optspace \
 		--enable-newlib-io-c99-formats \
 		--enable-newlib-io-long-long \
+		--enable-newlib-global-stdio-streams \
 		--disable-newlib-io-float \
 		--disable-newlib-io-long-double \
 		--disable-newlib-supplied-syscalls \

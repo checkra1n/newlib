@@ -1,8 +1,9 @@
 ARCH                        := aarch64-none-darwin
-ROOT                        := $(shell pwd)
-SRC                         := $(ROOT)/src
-BUILD                       := $(ROOT)/build
-PREFIX                      := $(ROOT)
+SRC                         := src
+BUILD                       := build
+# XXX: This makes PREFIX an absolute path, which breaks if there's spaces in any path component and
+#      kills the ability to move the repo around without a "make distclean", but for now, newlib requires this.
+PREFIX                      := $(shell pwd)
 
 ifndef HOST_OS
     ifeq ($(OS),Windows_NT)
@@ -89,9 +90,9 @@ $(BUILD)/libc.a: $(BUILD)/Makefile always
 	$(MAKE) -C $(BUILD) all
 
 # Dependency
-$(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefile.in | $(BUILD)
+$(BUILD)/Makefile: Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefile.in | $(BUILD)
 	cd $(BUILD) && \
-	$(SRC)/newlib/configure \
+	../$(SRC)/newlib/configure \
 		--prefix='$(PREFIX)' \
 		--host=$(ARCH) \
 		--enable-target-optspace \
@@ -113,6 +114,7 @@ $(BUILD)/Makefile: $(ROOT)/Makefile $(SRC)/newlib/configure $(SRC)/newlib/Makefi
 		AR='$(EMBEDDED_AR)' \
 		RANLIB='$(EMBEDDED_RANLIB)' \
 	;
+	$(MAKE) -C $(BUILD) clean
 
 $(BUILD) $(ARCH)/fixup:
 	mkdir -p $@

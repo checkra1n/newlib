@@ -77,7 +77,7 @@ EMBEDDED_LD_FLAGS           ?= $(EMBEDDED_LDFLAGS) $(NEWLIB_LDFLAGS)
 
 all: $(ARCH)/fixup/libc.a
 
-# We need to replace the implemntations of __stack_chk_fail and __chk_fail
+# We need to replace the implementation of __stack_chk_fail and __chk_fail
 $(ARCH)/fixup/libc.a: $(ARCH)/lib/libc.a | $(ARCH)/fixup
 	cp $< $@
 	$(EMBEDDED_AR) -d $@ lib_a-stack_protector.o lib_a-chk_fail.o
